@@ -1,13 +1,13 @@
-title = "Car Game";
+title = "OFF-DUTY COP";
 
 description = `
-
+[HOLD] to Brake
 `;
 
 const G = {
     WIDTH: 200,
     HEIGHT: 200,
-    OBSTACLESPEED: 1.2,
+    OBSTACLESPEED: 2,
 
     STREETLINE_SIZE: 4,
     PLAYER_SIZE: 6
@@ -39,18 +39,26 @@ options = {
 };
 
 /**
- * @typedef {{
- * pos: Vector,
- * state: number
+ * @typedef {{pos: Vector, state: number
  * }} Player
  */
 
 /**
- * @type { Player [] }
+@type { Player [] }
  */ 
 let player;
 
+/**
+ * @typedef {{ pos: Vector, type: number
+ * }} Obstacle
+ */
+
+/**
+ * @type { Obstacle [] }
+ */
 let obstacle;
+
+
 /**
  * @typedef {{
  * pos: Vector,
@@ -62,10 +70,13 @@ let obstacle;
  */
 let streetLine;
 let lineGroup;
+let diffUp;
+let obstacleNum;
 
 function update() {
   if (!ticks) {
-    
+    diffUp = 120;
+    obstacleNum = 0;
     player = [];
     // populates array with "pixels" that make a car
     for (let i = 0; i < 8; i++) {
@@ -85,10 +96,6 @@ function update() {
         }
     }
 
-    obstacle = {
-      pos: vec(20, 20)
-    }
-
     // needlessly complicated street line generation
     streetLine = [];
     lineGroup = [];
@@ -104,27 +111,37 @@ function update() {
         }
         // adds the entire line into one element of lineGroup
         lineGroup.push(streetLine);
-        }
     }
+    obstacle = [];
+    }
+
+    addScore(floor(2 * G.OBSTACLESPEED));
+
+    diffUp--;
+    if (diffUp < 0 && G.OBSTACLESPEED < 7 && !input.isPressed) {
+        G.OBSTACLESPEED += 0.5;
+        diffUp = 10;
+        console.log(G.OBSTACLESPEED);
+    }
+
+    if (G.OBSTACLESPEED < 1) {
+        G.OBSTACLESPEED = 1.1;
+    }
+
+    if(input.isPressed) {
+        G.OBSTACLESPEED -= 0.1;
+      }
 
     // draw sidewalks
     color("light_black");
     box(0, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
     box(G.WIDTH, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
 
-    if(obstacle.pos.y < G.HEIGHT){
-        obstacle.pos.y += G.OBSTACLESPEED;
-        obstacle.pos.x += G.OBSTACLESPEED;
-    }
-
-    color("red");
-    char("b", obstacle.pos);
-
   // iterates through each array of sprites in streetLine
   remove(lineGroup, (l) => {
     // retrieves pos from each sprite in streetLine
     for (let i = 0; i < l.length; i++) {
-        l[i].pos.y += G.OBSTACLESPEED / 3; // speed of line relative to obstacleSpeed
+        l[i].pos.y += floor(G.OBSTACLESPEED / 3) + 1; // speed of line relative to obstacleSpeed
         color("yellow");
         box(l[i].pos, G.STREETLINE_SIZE); // draw sprite
 
@@ -135,11 +152,35 @@ function update() {
     }
     });
 
+    if (obstacle.length === 0) {
+        const posX = floor(rnd(1, 3)) == 1 ? G.WIDTH - 10 : 10;
+        const posY = -32;
+        const type = floor(rnd(0, 2));
+        obstacle.push({ pos: vec(posX, posY), type }); 
+    }
+
+    remove(obstacle, (o) => {
+        o.pos.y += (G.OBSTACLESPEED / 3) + 1;
+        if (o.type === 1 && o.pos.x < G.WIDTH - 10) {
+            o.pos.x += rnd();
+        } else if (o.type === 0 && o.pos.x > 10){
+            o.pos.x -= rnd(3, 9);
+        }
+        color("green");
+        box(o.pos, 8);
+
+        if (o.pos.y > G.HEIGHT) {
+            o.pos.y = -(rnd(16, 128));
+            o.pos.x = rnd(10, G.WIDTH - 10);
+            o.type = floor(rnd(0, 2));
+        }
+    });
+
   remove(player, (p) => {
     if (p.state === 0) {
         color("light_cyan");
     } else if (p.state === 1) {
-        color("light_red");
+        color(input.isPressed ? "red" : "light_red");
     } else if (p.state === 3) {
         color("cyan");
     } else {
@@ -148,4 +189,5 @@ function update() {
     char("a", p.pos);
   });
 
+  text(floor(G.OBSTACLESPEED * 25).toString(), 3, 10);
 }
