@@ -7,7 +7,9 @@ description = `
 const G = {
     WIDTH: 200,
     HEIGHT: 200,
-    OBSTACLESPEED: 1.2
+    OBSTACLESPEED: 1.2,
+
+    STREETLINE_SIZE: 4
 };
 
 characters = [
@@ -48,19 +50,36 @@ options = {
 let player;
 
 let obstacle;
+/**
+ * @typedef {{
+ * pos: Vector,
+ * }} StreetLine
+ */
+
+/**
+ * @type { StreetLine []}  
+ */
+let streetLine;
 
 function update() {
   if (!ticks) {
     player = [];
     for (let i = 0; i < 4; i++) {
         for (let k = 0; k < 4; k++) {
-            const pos = vec((G.WIDTH/2 - 6) + (k * 6), (G.HEIGHT/2 + 42) + (i * 6));
+            const pos = vec((G.WIDTH/2 - 6) + (k * 6), (G.HEIGHT/2 + (6 * 7)) + (i * 6));
             const state = 0;
             player.push({ pos, state });
         }
     }
     obstacle = {
       pos: vec(20, 20)
+    }
+    streetLine = [];
+    for (let i = 0; i < 2; i++) {
+        for (let k = 0; k < 6; k++) {
+            const pos = vec((G.WIDTH/2) + (i * G.STREETLINE_SIZE), (0 - (6 * G.STREETLINE_SIZE)) + (k * G.STREETLINE_SIZE));
+            streetLine.push({ pos });
+        }
     }
   }
 
@@ -77,5 +96,11 @@ function update() {
         color("blue");
     }
     char("a", p.pos);
+  });
+
+  remove(streetLine, (s) => {
+    s.pos.y++;
+    color("yellow");
+    box(s.pos.x, s.pos.y, G.STREETLINE_SIZE);
   })
 }
