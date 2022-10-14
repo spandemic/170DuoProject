@@ -30,7 +30,10 @@ options = {
         x: G.WIDTH,
         y: G.HEIGHT
     },
-    theme: "dark"
+    theme: "dark",
+    isReplayEnabled: true,
+    isCapturing: true,
+    seed: 2
 };
 
 /**
@@ -70,6 +73,7 @@ let playerPosition;
 let playerX;
 let obstacleSpawn;
 let moving;
+let playerLives;
 
 function update() {
   if (!ticks) {
@@ -81,6 +85,7 @@ function update() {
     moving = 1;
     obstacle = [];
     streetLine = [];
+    playerLives = 3;
     // create group of streetLine
     for (let n = 0; n < 3; n++) {
         const drawPos = 1 * (n * 72);   // distance between each draw
@@ -93,8 +98,16 @@ function update() {
 
     addScore(floor(2 * floor(G.OBSTACLESPEED / 2)));
 
-    // draw sidewalks
-    color("light_black");
+    if (playerLives === 3) {
+        color("green");
+    } else if (playerLives === 2) {
+        color("yellow");
+    } else if (playerLives === 1) {
+        color("red");
+    } else {
+        color("light_red");
+        end();
+    }
     box(0, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
     box(G.WIDTH, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
 
@@ -119,6 +132,7 @@ function update() {
 
     if(input.isJustReleased) {
         player = [];
+        play("click");
         if (playerPosition === 2) {
             playerPosition--;
             moving = -1;
@@ -211,11 +225,17 @@ function update() {
     }
 
     remove(obstacle, (o) => {
-        color("red");
-        box(o.pos, 30, 8);
-
         o.pos.y += (G.OBSTACLESPEED);
-        return(o.pos.y > G.HEIGHT);
+        color("red");
+
+        const isCollidingWithPlayer = box(o.pos, 30, 8).isColliding.char.a;
+
+        if (isCollidingWithPlayer) {
+            particle(o.pos.x, o.pos.y);
+            play("hit");
+            playerLives--;
+        }
+        return(o.pos.y > G.HEIGHT || isCollidingWithPlayer);
     });
 
     
