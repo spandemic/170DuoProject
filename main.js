@@ -22,12 +22,6 @@ gggggg
 gggggg
 gggggg
 gggggg
-`,`
- gggg
-gggggg
-gg  gg
-gg  gg
-gg  gg
 `
 ];
 
@@ -50,7 +44,7 @@ options = {
 let player;
 
 /**
- * @typedef {{ pos: Vector,
+ * @typedef {{ pos: Vector
  * }} Obstacle
  */
 
@@ -85,7 +79,7 @@ function update() {
     playerX = 0;
     obstacleSpawn = 0;
     moving = 1;
-  
+    obstacle = [];
     streetLine = [];
     // create group of streetLine
     for (let n = 0; n < 3; n++) {
@@ -94,24 +88,28 @@ function update() {
         streetLine.push({ pos });
         pos = vec((G.WIDTH * 2/3 - 6), (-drawPos - (28)));
         streetLine.push({ pos });
-    }
-    obstacle = [];
+        }
     }
 
     addScore(floor(2 * floor(G.OBSTACLESPEED / 2)));
 
+    // draw sidewalks
+    color("light_black");
+    box(0, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
+    box(G.WIDTH, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
+
     diffUp--;
-    if (diffUp < 0 && G.OBSTACLESPEED < 9 && !input.isPressed) {
-        G.OBSTACLESPEED += 0.75;
+    if (diffUp < 0 && G.OBSTACLESPEED < 6 && !input.isPressed) {
+        G.OBSTACLESPEED += 0.5;
         diffUp = 10;
         console.log(G.OBSTACLESPEED);
     }
 
     if(input.isPressed) {
-        if (G.OBSTACLESPEED < 0.11) {
+        if (G.OBSTACLESPEED < 0.31) {
             G.OBSTACLESPEED -= 0.01;
         } else {
-            G.OBSTACLESPEED -= 0.1;
+            G.OBSTACLESPEED -= 0.3;
         }
     }
 
@@ -136,12 +134,6 @@ function update() {
         }
     }
 
-    
-    // draw sidewalks
-    color("light_black");
-    box(0, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
-    box(G.WIDTH, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
-
   // iterates through each array of sprites in streetLine
   remove(streetLine, (l) => {
     // retrieves pos from each sprite in streetLine 
@@ -150,8 +142,8 @@ function update() {
         l.pos.y += G.OBSTACLESPEED;
 
         // cycles lines from bottom of screen to top
-        if(l.pos.y > G.HEIGHT) {
-            l.pos.y = -24;
+        if(l.pos.y > G.HEIGHT + 24) {
+            l.pos.y = 0;
         }
     
     });
@@ -194,34 +186,38 @@ function update() {
             color("yellow");
         }
         char("a", p.pos);
-        });
-  
-    
 
+        if (input.isPressed) {
+            color("purple");
+            particle(p.pos.x, p.pos.y + 6);
+        }
+    });
+  
     if (obstacle.length === 0) {
+        console.log("hi");
         for (let i = 0; i < 4; i++) {
             obstacleSpawn = floor(rnd(0, 3));
             let posX = 0;
             if (obstacleSpawn === 0) {
-                posX = G.WIDTH - 54;
+                posX = G.WIDTH/2 - 51;
             } else if (obstacleSpawn === 1) {
-                posX = G.WIDTH/2;
+                posX = G.WIDTH/2 + 3;
             } else {
-                posX = G.WIDTH/2 + 54
+                posX = G.WIDTH/2 + 51;
             }
-            const posY = rnd(400, 1800);
-            obstacle.push({pos: vec(posX, posY)})
+            const posY = -rnd(400, 2500);
+            obstacle.push({pos: vec(posX, posY)});
         }
     }
 
     remove(obstacle, (o) => {
         color("red");
-        box(o.pos, G.WIDTH, 8);
+        box(o.pos, 30, 8);
 
         o.pos.y += (G.OBSTACLESPEED);
         return(o.pos.y > G.HEIGHT);
     });
 
     
-  text(floor(G.OBSTACLESPEED * 25).toString(), 3, 10);
+  text("MPH: " + floor(G.OBSTACLESPEED * 25).toString(), 3, 10);
 }
