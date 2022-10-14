@@ -32,7 +32,9 @@ options = {
     },
     theme: "dark",
     isReplayEnabled: true,
-    // isCapturing: true,
+    isCapturing: true,
+    isCapturingGameCanvasOnly: true,
+    captureCanvasSize: 1,
     seed: 2
 };
 
