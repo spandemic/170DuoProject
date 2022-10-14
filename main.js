@@ -71,31 +71,15 @@ let obstacle;
 let streetLine;
 let lineGroup;
 let diffUp;
-let obstacleNum;
+let playerPosition;
+let playerX;
 
 function update() {
   if (!ticks) {
-    diffUp = 120;
-    obstacleNum = 0;
+    diffUp = 0;
     player = [];
-    // populates array with "pixels" that make a car
-    for (let i = 0; i < 8; i++) {
-        for (let k = 0; k < 5; k++) {
-            const pos = vec((G.WIDTH/2 - G.PLAYER_SIZE * 1.5) + (k * G.PLAYER_SIZE), (G.HEIGHT/2 + (G.PLAYER_SIZE * 6)) + (i * G.PLAYER_SIZE));
-            let state = 0;
-            if ((i === 1 || i === 2 || i === 6) && (k === 1 || k === 2 || k === 3)) {
-                state = 3
-            } else if ((i === 0) && (k != 2) || (i === 7) && (k === 1 || k === 3)) {
-                state = 2;
-            } else if ((i === 7) && (k === 0 || k === 4)) {
-                state = 1;
-            } else {
-                state = 0;
-            }
-            player.push({ pos, state });
-        }
-    }
-
+    playerPosition = 1;
+    playerX = 0;
     // needlessly complicated street line generation
     streetLine = [];
     lineGroup = [];
@@ -115,7 +99,7 @@ function update() {
     obstacle = [];
     }
 
-    addScore(floor(2 * G.OBSTACLESPEED));
+    // addScore(floor(2 * G.OBSTACLESPEED));
 
     diffUp--;
     if (diffUp < 0 && G.OBSTACLESPEED < 7 && !input.isPressed) {
@@ -124,14 +108,28 @@ function update() {
         console.log(G.OBSTACLESPEED);
     }
 
-    if (G.OBSTACLESPEED < 1) {
-        G.OBSTACLESPEED = 1.1;
+    if(input.isPressed) {
+        if (G.OBSTACLESPEED < 0.16) {
+            G.OBSTACLESPEED -= 0.01;
+        } else {
+            G.OBSTACLESPEED -= 0.15;
+        }
     }
 
-    if(input.isPressed) {
-        G.OBSTACLESPEED -= 0.1;
-      }
+    if (G.OBSTACLESPEED < 0.1) {
+        G.OBSTACLESPEED = 0;
+    }
 
+    if(input.isJustReleased) {
+        player = [];
+        if (playerPosition === 2) {
+            playerPosition = 0;
+        } else {
+            playerPosition++;
+        }
+    }
+
+    
     // draw sidewalks
     color("light_black");
     box(0, G.HEIGHT / 2, G.WIDTH / 4, G.HEIGHT);
@@ -141,7 +139,7 @@ function update() {
   remove(lineGroup, (l) => {
     // retrieves pos from each sprite in streetLine
     for (let i = 0; i < l.length; i++) {
-        l[i].pos.y += floor(G.OBSTACLESPEED / 3) + 1; // speed of line relative to obstacleSpeed
+        l[i].pos.y += G.OBSTACLESPEED / 3; // speed of line relative to obstacleSpeed
         color("yellow");
         box(l[i].pos, G.STREETLINE_SIZE); // draw sprite
 
@@ -151,43 +149,70 @@ function update() {
         }
     }
     });
+    
+    if(player.length === 0) {
+        console.log(playerPosition);
+        if (playerPosition === 1) {
+            playerX = 91;
+        } else if (playerPosition === 0) {
+            playerX = 46
+        } else if (playerPosition === 2) {
+            playerX = 136
+        }
+        for (let i = 0; i < 8; i++) {
+            for (let k = 0; k < 5; k++) {
+                const pos = vec((playerX) + (k * G.PLAYER_SIZE), (G.HEIGHT/2 + (G.PLAYER_SIZE * 6)) + (i * G.PLAYER_SIZE));
+                let state = 0;
+                if ((i === 1 || i === 2 || i === 6) && (k === 1 || k === 2 || k === 3)) {
+                    state = 3
+                } else if ((i === 0) && (k != 2) || (i === 7) && (k === 1 || k === 3)) {
+                    state = 2;
+                } else if ((i === 7) && (k === 0 || k === 4)) {
+                    state = 1;
+                } else {
+                    state = 0;
+                }
+                player.push({ pos, state });
+            }
+        }
+    }
+
+    remove(player, (p) => {
+        if (p.state === 0) {
+            color("light_cyan");
+        } else if (p.state === 1) {
+            color(input.isPressed ? "red" : "light_red");
+        } else if (p.state === 3) {
+            color("cyan");
+        } else {
+            color("yellow");
+        }
+        char("a", p.pos);
+        });
+  
+    
 
     if (obstacle.length === 0) {
-        const posX = floor(rnd(1, 3)) == 1 ? G.WIDTH - 10 : 10;
-        const posY = -32;
-        const type = floor(rnd(0, 2));
-        obstacle.push({ pos: vec(posX, posY), type }); 
+        let posX = G.WIDTH/2;
+        let posY = -rnd(400, 1000);
+        let type = floor(rnd(0, 2));
+        obstacle.push({ pos: vec(posX, posY), type });
+         posX = G.WIDTH/2;
+         posY = -rnd(1000, 2000);
+         type = floor(rnd(0, 2)); 
+        obstacle.push({ pos: vec(posX, posY), type });
     }
 
     remove(obstacle, (o) => {
-        o.pos.y += (G.OBSTACLESPEED / 3) + 1;
-        if (o.type === 1 && o.pos.x < G.WIDTH - 10) {
-            o.pos.x += rnd();
-        } else if (o.type === 0 && o.pos.x > 10){
-            o.pos.x -= rnd(3, 9);
-        }
-        color("green");
-        box(o.pos, 8);
+        o.pos.y += (G.OBSTACLESPEED);
+        
+        color(o.type === 0 ? "green" : "red");
+        box(o.pos, G.WIDTH, 8);
 
-        if (o.pos.y > G.HEIGHT) {
-            o.pos.y = -(rnd(16, 128));
-            o.pos.x = rnd(10, G.WIDTH - 10);
-            o.type = floor(rnd(0, 2));
-        }
+        return(o.pos.y > G.HEIGHT);
+        
     });
 
-  remove(player, (p) => {
-    if (p.state === 0) {
-        color("light_cyan");
-    } else if (p.state === 1) {
-        color(input.isPressed ? "red" : "light_red");
-    } else if (p.state === 3) {
-        color("cyan");
-    } else {
-        color("yellow");
-    }
-    char("a", p.pos);
-  });
-
+    
   text(floor(G.OBSTACLESPEED * 25).toString(), 3, 10);
 }
