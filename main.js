@@ -32,7 +32,7 @@ options = {
     },
     theme: "dark",
     isReplayEnabled: true,
-    isCapturing: true,
+    // isCapturing: true,
     seed: 2
 };
 
